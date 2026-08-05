@@ -1,6 +1,7 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
+from services import extract_skills, calculate_ats_score
 import pdfplumber
 
 app = FastAPI()
@@ -27,14 +28,9 @@ def health_check():
     return {"status": "ok"}
 
 @app.post("/analyze")
-async def analyze_resume(file: UploadFile = File(...)):
+async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
     """
-    Analyze a resume:
-    1. Save PDF
-    2. Extract text
-    3. Return extracted text (+ score, suggestions later)
-    
-    One endpoint for the entire user journey.
+    Analyze a resume against a job description.
     """
     try:
         # Save the file
@@ -48,15 +44,26 @@ async def analyze_resume(file: UploadFile = File(...)):
         with pdfplumber.open(file_path) as pdf:
             for page in pdf.pages:
                 page_text = page.extract_text()
-                if page_text:  # Handle None if page has no text
+                if page_text:
                     text += page_text + "\n"
         
-        # Return extracted text
+        # Extract skills from both
+        resume_skills = extract_skills(text)
+        job_skills = extract_skills(job_description)
+        
+        # Calculate ATS score
+        scoring = calculate_ats_score(resume_skills, job_skills)
+        
         return {
             "success": True,
             "filename": file.filename,
             "text": text,
-            "message": "Resume processed successfully"
+            "resume_skills": resume_skills,
+            "job_skills": job_skills,
+            "matched_skills": scoring["matched_skills"],
+            "missing_skills": scoring["missing_skills"],
+            "ats_score": scoring["ats_score"],
+            "message": "Resume analyzed successfully"
         }
     except Exception as e:
         return {
