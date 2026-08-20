@@ -54,10 +54,16 @@ function App() {
     }
   }
 
+  const getScoreColor = (score) => {
+    if (score >= 80) return '#28a745' // Green
+    if (score >= 60) return '#ffc107' // Yellow
+    return '#dc3545' // Red
+  }
+
   return (
     <div className="App">
       <h1>🎯 SkillMatch AI</h1>
-      <p>Analyze your resume against job descriptions</p>
+      <p>Analyze your resume against job descriptions with weighted scoring</p>
       
       <hr />
 
@@ -114,43 +120,82 @@ function App() {
 
       {/* Results Section */}
       {results && (
-        <div style={{ border: '1px solid #007bff', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
+        <div style={{ border: '2px solid #007bff', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
           <h2>📊 Analysis Results</h2>
 
           {/* ATS Score */}
           <div style={{ 
-            fontSize: '24px', 
+            fontSize: '32px', 
             fontWeight: 'bold',
             marginBottom: '20px',
-            padding: '15px',
+            padding: '20px',
             backgroundColor: '#f0f0f0',
             borderRadius: '8px',
-            textAlign: 'center'
+            textAlign: 'center',
+            color: getScoreColor(results.scoring.ats_score)
           }}>
-            ATS Score: <span style={{ color: results.ats_score >= 70 ? '#28a745' : results.ats_score >= 50 ? '#ffc107' : '#dc3545' }}>
-              {results.ats_score}%
-            </span>
+            ATS Score: {results.scoring.ats_score}%
           </div>
 
-          {/* Match Summary */}
-          <p style={{ fontSize: '16px', marginBottom: '15px' }}>
-            Matched <strong>{results.matched_skills.length}</strong> out of <strong>{results.job_skills.length}</strong> required skills
-          </p>
-
-          {/* Matched Skills */}
-          <div style={{ marginBottom: '20px' }}>
-            <h4>✅ Matched Skills ({results.matched_skills.length}):</h4>
-            <p style={{ color: '#28a745', fontSize: '14px', lineHeight: '1.6' }}>
-              {results.matched_skills.length > 0 ? results.matched_skills.join(', ') : 'None'}
-            </p>
+          {/* Point Breakdown */}
+          <div style={{ 
+            marginBottom: '20px', 
+            padding: '10px', 
+            backgroundColor: '#f9f9f9',
+            borderRadius: '4px',
+            fontSize: '14px'
+          }}>
+            <strong>Earned {results.scoring.earnings.earned_points} / {results.scoring.earnings.possible_points} points</strong>
           </div>
 
-          {/* Missing Skills */}
-          <div style={{ marginBottom: '20px' }}>
-            <h4>❌ Missing Skills ({results.missing_skills.length}):</h4>
-            <p style={{ color: '#dc3545', fontSize: '14px', lineHeight: '1.6' }}>
-              {results.missing_skills.length > 0 ? results.missing_skills.join(', ') : 'None'}
-            </p>
+          {/* Required Skills Section */}
+          <div style={{ marginBottom: '25px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+            <h3 style={{ marginTop: 0 }}>
+              ✅ Required Skills ({results.scoring.required.matched_count}/{results.scoring.required.total_count} matched)
+            </h3>
+            
+            <div style={{ marginBottom: '15px' }}>
+              <h4 style={{ marginBottom: '8px', color: '#28a745' }}>Matched:</h4>
+              <p style={{ color: '#28a745', fontSize: '14px', lineHeight: '1.6' }}>
+                {results.scoring.required.matched.length > 0 
+                  ? results.scoring.required.matched.join(', ') 
+                  : 'None'}
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ marginBottom: '8px', color: '#dc3545' }}>Missing:</h4>
+              <p style={{ color: '#dc3545', fontSize: '14px', lineHeight: '1.6' }}>
+                {results.scoring.required.missing.length > 0 
+                  ? results.scoring.required.missing.join(', ') 
+                  : 'None'}
+              </p>
+            </div>
+          </div>
+
+          {/* Preferred Skills Section */}
+          <div style={{ marginBottom: '25px', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+            <h3 style={{ marginTop: 0 }}>
+              ⭐ Preferred Skills ({results.scoring.preferred.matched_count}/{results.scoring.preferred.total_count} matched)
+            </h3>
+            
+            <div style={{ marginBottom: '15px' }}>
+              <h4 style={{ marginBottom: '8px', color: '#28a745' }}>Matched:</h4>
+              <p style={{ color: '#28a745', fontSize: '14px', lineHeight: '1.6' }}>
+                {results.scoring.preferred.matched.length > 0 
+                  ? results.scoring.preferred.matched.join(', ') 
+                  : 'None'}
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ marginBottom: '8px', color: '#dc3545' }}>Missing:</h4>
+              <p style={{ color: '#dc3545', fontSize: '14px', lineHeight: '1.6' }}>
+                {results.scoring.preferred.missing.length > 0 
+                  ? results.scoring.preferred.missing.join(', ') 
+                  : 'None'}
+              </p>
+            </div>
           </div>
 
           {/* Extracted Text */}

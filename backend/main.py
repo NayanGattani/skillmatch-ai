@@ -1,7 +1,7 @@
+from services import extract_skills, parse_job_sections, calculate_ats_score
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
-from services import extract_skills, calculate_ats_score
 import pdfplumber
 
 app = FastAPI()
@@ -30,41 +30,52 @@ def health_check():
 @app.post("/analyze")
 async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
     """
-    Analyze a resume against a job description.
+    Analyze a resume against a job description with weighted scoring.
     """
     try:
         # Save the file
         file_path = UPLOAD_DIR / file.filename
+
         with open(file_path, "wb") as buffer:
             contents = await file.read()
             buffer.write(contents)
-        
+
         # Extract text from PDF
         text = ""
+
         with pdfplumber.open(file_path) as pdf:
             for page in pdf.pages:
                 page_text = page.extract_text()
+
                 if page_text:
                     text += page_text + "\n"
-        
-        # Extract skills from both
+
+        # Parse job description
+        sections = parse_job_sections(job_description)
+
+        # Extract skills
         resume_skills = extract_skills(text)
-        job_skills = extract_skills(job_description)
-        
-        # Calculate ATS score
-        scoring = calculate_ats_score(resume_skills, job_skills)
-        
+        required_skills = extract_skills(sections["required"])
+        preferred_skills = extract_skills(sections["preferred"])
+
+        # Calculate weighted ATS score
+        scoring = calculate_ats_score(
+            resume_skills,
+            required_skills,
+            preferred_skills
+        )
+
         return {
             "success": True,
             "filename": file.filename,
             "text": text,
             "resume_skills": resume_skills,
-            "job_skills": job_skills,
-            "matched_skills": scoring["matched_skills"],
-            "missing_skills": scoring["missing_skills"],
-            "ats_score": scoring["ats_score"],
+            "required_skills": required_skills,
+            "preferred_skills": preferred_skills,
+            "scoring": scoring,
             "message": "Resume analyzed successfully"
         }
+
     except Exception as e:
         return {
             "success": False,
