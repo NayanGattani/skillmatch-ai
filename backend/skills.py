@@ -48,67 +48,72 @@ TECH_SKILLS = {
     ]
 }
 
+
 # Flatten into one searchable list
 ALL_SKILLS = []
+
 for category in TECH_SKILLS.values():
     ALL_SKILLS.extend(category)
 
-# Skill aliases - map variations to canonical names
+
+# Every variant points to one canonical skill.
+# The extractor searches these variants, but returns only
+# the canonical skill name.
 SKILL_ALIASES = {
-    # Kubernetes variants
+    # Kubernetes
     "k8s": "Kubernetes",
     "k8": "Kubernetes",
-    
-    # PostgreSQL variants
+
+    # PostgreSQL
     "postgres": "PostgreSQL",
+    "postgresql": "PostgreSQL",
     "psql": "PostgreSQL",
-    
-    # React variants
+
+    # React
     "react.js": "React",
     "reactjs": "React",
     "react.ts": "React",
-    
-    # Node variants
+
+    # Node
     "node": "Node.js",
     "nodejs": "Node.js",
     "node.js": "Node.js",
-    
+
     # Google Cloud
     "google cloud": "GCP",
     "google cloud platform": "GCP",
-    
+
     # C variants
     "c#": "C#",
     "c++": "C++",
-    
-    # CI/CD variants
+
+    # CI/CD
     "ci cd": "CI/CD",
-    
-    # REST variants
-    "restful": "REST API",
+
+    # REST
     "rest": "REST API",
-    "rest apis":"REST API",
-    
-    # Testing variants
+    "restful": "REST API",
+    "rest api": "REST API",
+    "rest apis": "REST API",
+
+    # Testing
     "unit test": "Unit Testing",
     "integration test": "Integration Testing",
 }
 
+
 def normalize_skill(skill: str) -> str:
     """
-    Normalize a skill name using aliases.
-    Returns canonical skill name from ALL_SKILLS.
+    Convert a skill variant into its canonical skill name.
     """
+
     skill_lower = skill.lower().strip()
-    
-    # Check if it's in aliases
+
     if skill_lower in SKILL_ALIASES:
         return SKILL_ALIASES[skill_lower]
-    
-    # Check if it's already canonical
+
     for canonical in ALL_SKILLS:
         if canonical.lower() == skill_lower:
             return canonical
-    
-    # Not found
+
     return skill
