@@ -3,6 +3,7 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import pdfplumber
+from ai_service import analyze_with_ai
 
 app = FastAPI()
 
@@ -31,6 +32,7 @@ def health_check():
 async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
     """
     Analyze a resume against a job description with weighted scoring.
+    Includes AI-powered analysis if API key is available.
     """
     try:
         # Save the file
@@ -58,12 +60,15 @@ async def analyze_resume(file: UploadFile = File(...), job_description: str = Fo
         required_skills = extract_skills(sections["required"])
         preferred_skills = extract_skills(sections["preferred"])
 
-        # Calculate weighted ATS score
+        # Calculate weighted ATS score (deterministic)
         scoring = calculate_ats_score(
             resume_skills,
             required_skills,
             preferred_skills
         )
+
+        # Get AI analysis (optional, gracefully fails)
+        ai_analysis = analyze_with_ai(text, job_description, scoring)
 
         return {
             "success": True,
@@ -73,6 +78,7 @@ async def analyze_resume(file: UploadFile = File(...), job_description: str = Fo
             "required_skills": required_skills,
             "preferred_skills": preferred_skills,
             "scoring": scoring,
+            "ai_analysis": ai_analysis,
             "message": "Resume analyzed successfully"
         }
 

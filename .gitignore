@@ -18,3 +18,14 @@ venv/
 
 # Windows
 Thumbs.db
+
+.env
+.env.local
+__pycache__/
+*.pyc
+venv/
+uploads/
+.DS_Store
+*.egg-info/
+dist/
+build/
