@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { Github, Linkedin, RotateCcw } from "lucide-react";
 
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
@@ -176,13 +176,28 @@ function Index() {
       </main>
 
       <footer className="border-t border-border-strong">
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p className="label-mono text-muted-foreground">
-            SKILLMATCH AI — SCORING RUNS ON THE EXISTING BACKEND
-          </p>
-          <p className="label-mono text-muted-foreground">
-            RESUMES ARE SENT ONLY TO YOUR OWN ANALYSIS SERVICE
-          </p>
+        <div className="mx-auto flex max-w-[1400px] items-center justify-center px-5 py-10 sm:px-8">
+          <div className="flex items-center gap-4 label-mono text-base text-muted-foreground">
+            <span>Built by Nayan Gattani</span>
+            <a
+              href="https://github.com/NayanGattani"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+              className="transition-colors hover:text-foreground"
+            >
+              <Github className="size-5" aria-hidden="true" />
+            </a>
+            <a
+              href="https://linkedin.com/in/nayangattani"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              className="transition-colors hover:text-foreground"
+            >
+              <Linkedin className="size-5" aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </footer>
     </div>

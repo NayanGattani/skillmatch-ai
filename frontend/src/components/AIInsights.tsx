@@ -56,7 +56,9 @@ export function AIInsights({ analysis }: { analysis?: AiAnalysis | null | undefi
       </h2>
 
       {analysis.summary && (
-        <p className="display-lg mt-5 max-w-[26ch] text-balance">{analysis.summary}</p>
+        <p className="mt-5 max-w-prose text-balance text-xl leading-snug">
+          {analysis.summary}
+        </p>
       )}
 
       <div className="mt-10 grid gap-8 lg:grid-cols-3">
@@ -70,13 +72,17 @@ export function AIInsights({ analysis }: { analysis?: AiAnalysis | null | undefi
           {analysis.experience_relevance && (
             <div>
               <p className="label-mono text-muted-foreground">EXPERIENCE RELEVANCE</p>
-              <p className="body-copy mt-3">{analysis.experience_relevance}</p>
+              <p className="mt-3 max-w-prose text-sm leading-snug text-muted-foreground">
+                {analysis.experience_relevance}
+              </p>
             </div>
           )}
           {analysis.skill_gap_analysis && (
             <div>
               <p className="label-mono text-muted-foreground">SKILL GAP ANALYSIS</p>
-              <p className="body-copy mt-3">{analysis.skill_gap_analysis}</p>
+              <p className="mt-3 max-w-prose text-sm leading-snug text-muted-foreground">
+                {analysis.skill_gap_analysis}
+              </p>
             </div>
           )}
         </div>
