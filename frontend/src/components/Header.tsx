@@ -16,8 +16,9 @@ export function Header({ status }: { status: "unknown" | "online" | "offline" })
             src="/favicon.png"
             alt=""
             aria-hidden="true"
-            className="size-7 shrink-0"
+            className="h-7 w-7 shrink-0 object-contain"
           />
+          <span aria-hidden="true" className="h-5 w-px shrink-0 bg-border-strong" />
           SKILLMATCH{" "}
           <span className="bg-lime px-1 text-lime-foreground">AI</span>
         </a>

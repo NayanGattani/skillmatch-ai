@@ -72,7 +72,7 @@ export function AIInsights({ analysis }: { analysis?: AiAnalysis | null | undefi
           {analysis.experience_relevance && (
             <div>
               <p className="label-mono text-muted-foreground">EXPERIENCE RELEVANCE</p>
-              <p className="mt-3 max-w-prose text-sm leading-snug text-muted-foreground">
+              <p className="mt-3 max-w-prose text-base leading-snug text-muted-foreground">
                 {analysis.experience_relevance}
               </p>
             </div>
@@ -80,7 +80,7 @@ export function AIInsights({ analysis }: { analysis?: AiAnalysis | null | undefi
           {analysis.skill_gap_analysis && (
             <div>
               <p className="label-mono text-muted-foreground">SKILL GAP ANALYSIS</p>
-              <p className="mt-3 max-w-prose text-sm leading-snug text-muted-foreground">
+              <p className="mt-3 max-w-prose text-base leading-snug text-muted-foreground">
                 {analysis.skill_gap_analysis}
               </p>
             </div>
