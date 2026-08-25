@@ -9,9 +9,15 @@ export function Header({ status }: { status: "unknown" | "online" | "offline" })
       <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-5 py-4 sm:px-8">
         <a
           href="/"
-          className="text-lg font-extrabold uppercase tracking-[-0.02em] sm:text-xl"
+          className="inline-flex items-center gap-2 text-lg font-extrabold uppercase tracking-[-0.02em] sm:text-xl"
           aria-label="SkillMatch AI home"
         >
+          <img
+            src="/favicon.png"
+            alt=""
+            aria-hidden="true"
+            className="size-7 shrink-0"
+          />
           SKILLMATCH{" "}
           <span className="bg-lime px-1 text-lime-foreground">AI</span>
         </a>
