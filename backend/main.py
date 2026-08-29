@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import pdfplumber
 from ai_service import analyze_with_ai
+from database import SessionLocal
+from models import Analysis
+from sqlalchemy import select
 
 app = FastAPI()
 
@@ -32,6 +35,8 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
 
 @app.post("/analyze")
 async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
@@ -75,6 +80,26 @@ async def analyze_resume(file: UploadFile = File(...), job_description: str = Fo
         # Get AI analysis (optional, gracefully fails)
         ai_analysis = analyze_with_ai(text, job_description, scoring)
 
+        # Save analysis result to PostgreSQL
+        db = SessionLocal()
+
+        try:
+            analysis = Analysis(
+    resume_filename=file.filename,
+    job_description=job_description,
+    ats_score=scoring["ats_score"],
+    required_matched=scoring["required"]["matched"],
+    required_missing=scoring["required"]["missing"],
+    preferred_matched=scoring["preferred"]["matched"],
+    preferred_missing=scoring["preferred"]["missing"],
+    ai_analysis=ai_analysis,
+)
+
+            db.add(analysis)
+            db.commit()
+        finally:
+            db.close()
+
         return {
             "success": True,
             "filename": file.filename,
@@ -87,8 +112,42 @@ async def analyze_resume(file: UploadFile = File(...), job_description: str = Fo
             "message": "Resume analyzed successfully"
         }
 
+
     except Exception as e:
         return {
             "success": False,
             "error": str(e)
         }
+
+@app.get("/analyses")
+def get_analyses():
+    db = SessionLocal()
+
+    try:
+        statement = (
+            select(Analysis)
+            .order_by(Analysis.created_at.desc())
+        )
+
+        analyses = db.scalars(statement).all()
+
+        return {
+            "success": True,
+            "analyses": [
+                {
+                    "id": analysis.id,
+                    "resume_filename": analysis.resume_filename,
+                    "ats_score": analysis.ats_score,
+                    "required_matched": analysis.required_matched,
+                    "required_missing": analysis.required_missing,
+                    "preferred_matched": analysis.preferred_matched,
+                    "preferred_missing": analysis.preferred_missing,
+                    "ai_analysis": analysis.ai_analysis,
+                    "created_at": analysis.created_at,
+                }
+                for analysis in analyses
+            ],
+        }
+
+    finally:
+        db.close()
