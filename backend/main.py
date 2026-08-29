@@ -1,16 +1,24 @@
-from services import extract_skills, parse_job_sections, calculate_ats_score
-from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.middleware.cors import CORSMiddleware
+import os
+import uuid
 from pathlib import Path
+
 import pdfplumber
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import select
+
 from ai_service import analyze_with_ai
 from database import SessionLocal
 from models import Analysis
-from sqlalchemy import select
+from s3_service import upload_resume
+from services import calculate_ats_score, extract_skills, parse_job_sections
+
+load_dotenv()
 
 app = FastAPI()
 
-# Add CORS middleware
+# Allow requests from the local frontend during development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -24,35 +32,67 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create uploads folder if it doesn't exist
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Use local storage by default; EC2 can override this with an environment variable
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# S3 is disabled locally and enabled in the AWS environment
+S3_ENABLED = os.getenv("S3_ENABLED", "false").lower() == "true"
+
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello, skillmatch-ai!"}
+    return {
+        "message": "Hello, skillmatch-ai!",
+        "s3_enabled": S3_ENABLED,
+    }
+
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
 
-
 @app.post("/analyze")
-async def analyze_resume(file: UploadFile = File(...), job_description: str = Form(...)):
-    """
-    Analyze a resume against a job description with weighted scoring.
-    Includes AI-powered analysis if API key is available.
-    """
-    try:
-        # Save the file
-        file_path = UPLOAD_DIR / file.filename
+async def analyze_resume(
+    file: UploadFile = File(...),
+    job_description: str = Form(...),
+):
+    """Analyze a resume against a job description."""
 
+    file_path = None
+    db = None
+
+    try:
+        if not file.filename:
+            return {
+                "success": False,
+                "error": "No filename provided.",
+            }
+
+        if not file.filename.lower().endswith(".pdf"):
+            return {
+                "success": False,
+                "error": "Only PDF files are supported.",
+            }
+
+        original_filename = Path(file.filename).name
+        unique_filename = f"{uuid.uuid4()}_{original_filename}"
+        file_path = UPLOAD_DIR / unique_filename
+
+        # Save the PDF temporarily for text extraction
         with open(file_path, "wb") as buffer:
             contents = await file.read()
             buffer.write(contents)
 
-        # Extract text from PDF
+        s3_key = None
+
+        # Store the resume in S3 when running in AWS
+        if S3_ENABLED:
+            s3_key = f"resumes/{unique_filename}"
+            upload_resume(str(file_path), s3_key)
+
+        # Extract text from the resume
         text = ""
 
         with pdfplumber.open(file_path) as pdf:
@@ -62,62 +102,76 @@ async def analyze_resume(file: UploadFile = File(...), job_description: str = Fo
                 if page_text:
                     text += page_text + "\n"
 
-        # Parse job description
         sections = parse_job_sections(job_description)
 
-        # Extract skills
         resume_skills = extract_skills(text)
         required_skills = extract_skills(sections["required"])
         preferred_skills = extract_skills(sections["preferred"])
 
-        # Calculate weighted ATS score (deterministic)
+        # ATS score is calculated deterministically
         scoring = calculate_ats_score(
             resume_skills,
             required_skills,
-            preferred_skills
+            preferred_skills,
         )
 
-        # Get AI analysis (optional, gracefully fails)
-        ai_analysis = analyze_with_ai(text, job_description, scoring)
+        ai_analysis = analyze_with_ai(
+            text,
+            job_description,
+            scoring,
+        )
 
-        # Save analysis result to PostgreSQL
+        # Store the analysis and its S3 reference in PostgreSQL
         db = SessionLocal()
 
-        try:
-            analysis = Analysis(
-    resume_filename=file.filename,
-    job_description=job_description,
-    ats_score=scoring["ats_score"],
-    required_matched=scoring["required"]["matched"],
-    required_missing=scoring["required"]["missing"],
-    preferred_matched=scoring["preferred"]["matched"],
-    preferred_missing=scoring["preferred"]["missing"],
-    ai_analysis=ai_analysis,
-)
+        analysis = Analysis(
+            resume_filename=original_filename,
+            s3_key=s3_key,
+            job_description=job_description,
+            ats_score=scoring["ats_score"],
+            required_matched=scoring["required"]["matched"],
+            required_missing=scoring["required"]["missing"],
+            preferred_matched=scoring["preferred"]["matched"],
+            preferred_missing=scoring["preferred"]["missing"],
+            ai_analysis=ai_analysis,
+        )
 
-            db.add(analysis)
-            db.commit()
-        finally:
-            db.close()
+        db.add(analysis)
+        db.commit()
+        db.refresh(analysis)
 
         return {
             "success": True,
-            "filename": file.filename,
+            "filename": original_filename,
             "text": text,
             "resume_skills": resume_skills,
             "required_skills": required_skills,
             "preferred_skills": preferred_skills,
             "scoring": scoring,
             "ai_analysis": ai_analysis,
-            "message": "Resume analyzed successfully"
+            "message": "Resume analyzed successfully",
         }
-
 
     except Exception as e:
+        if db:
+            db.rollback()
+
         return {
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }
+
+    finally:
+        if db:
+            db.close()
+
+        # Remove the temporary local copy after processing
+        if file_path and file_path.exists():
+            try:
+                file_path.unlink()
+            except OSError:
+                pass
+
 
 @app.get("/analyses")
 def get_analyses():
@@ -137,6 +191,7 @@ def get_analyses():
                 {
                     "id": analysis.id,
                     "resume_filename": analysis.resume_filename,
+                    "s3_key": analysis.s3_key,
                     "ats_score": analysis.ats_score,
                     "required_matched": analysis.required_matched,
                     "required_missing": analysis.required_missing,

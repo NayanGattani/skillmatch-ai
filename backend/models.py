@@ -23,6 +23,11 @@ class Analysis(Base):
         nullable=False,
     )
 
+    s3_key: Mapped[str] = mapped_column(
+        String(500),
+        nullable=False,
+    )
+
     job_description: Mapped[str] = mapped_column(
         Text,
         nullable=False,
@@ -67,3 +72,5 @@ class Analysis(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+
+   

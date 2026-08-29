@@ -1,7 +1,9 @@
-fastapi>=0.104.0,<1.0
-uvicorn>=0.26.2,<1.0
-pdfplumber>=0.10.0,<1.0
-python-multipart>=0.0.6,<1.0
-python-dotenv>=1.0.0,<2.0
-openai>=1.0.0,<2.0
-"""Initialize an OpenAI-compatible client configured for Groq."""
+fastapi>=0.104.0
+uvicorn>=0.26.2
+pdfplumber>=0.10.0
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+openai>=1.0.0
+sqlalchemy>=2.0.0
+psycopg[binary]>=3.1.0
+boto3>=1.35.0
