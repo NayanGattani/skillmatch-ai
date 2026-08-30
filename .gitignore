@@ -1,29 +1,33 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
+# Environment / secrets
+.env
+.env.*
+!.env.example
 
-# Virtual Environment
+# Node
+node_modules/
+.output/
+dist/
+
+# Python
 venv/
 .venv/
-
-# Environment Variables
-.env
-
-# VS Code
-.vscode/
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-
-.env
-.env.local
 __pycache__/
-*.pyc
-venv/
+*.py[cod]
+
+# Uploaded files / personal data
+uploads/
+resumes/
+
+# Secrets / keys
+*.pem
+*.key
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
 uploads/
 .DS_Store
 *.egg-info/
