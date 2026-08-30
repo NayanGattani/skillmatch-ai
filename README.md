@@ -292,15 +292,18 @@ Potential improvements include:
 
 ### Resume Analysis
 
-*Add application screenshot here.*
+<img width="1895" height="770" alt="image" src="https://github.com/user-attachments/assets/e16c20fb-fe9c-4827-a4f4-ce0613d03e0a" />
+
 
 ### Job Matching Results
 
-*Add application screenshot here.*
+<img width="1896" height="876" alt="image" src="https://github.com/user-attachments/assets/e2d4c3df-e5cb-4217-9c71-3063980f7a10" />
+
 
 ### Dashboard
 
-*Add application screenshot here.*
+<img width="1901" height="848" alt="image" src="https://github.com/user-attachments/assets/59b152af-33b5-4c12-a78e-f97f4d1091a6" />
+
 
 ---
 
