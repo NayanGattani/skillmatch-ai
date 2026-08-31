@@ -1,7 +1,0 @@
-fastapi>=0.104.0,<1.0
-uvicorn>=0.26.2,<1.0
-pdfplumber>=0.10.0,<1.0
-python-multipart>=0.0.6,<1.0
-python-dotenv>=1.0.0,<2.0
-openai>=1.0.0,<2.0
-"""Initialize an OpenAI-compatible client configured for Groq."""
