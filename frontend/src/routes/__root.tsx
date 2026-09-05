@@ -75,6 +75,20 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
+
+      {
+  property: "og:title",
+  content: "SkillMatch AI — Resume vs. job description match score",
+},
+{
+  property: "og:description",
+  content:
+    "Upload a resume and paste a job description to get a weighted ATS match score, skill gaps, and AI recommendations.",
+},
+{
+  property: "og:image",
+  content: "http://15.252.174.56/og-image.png",
+}, 
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SkillMatch AI" },
