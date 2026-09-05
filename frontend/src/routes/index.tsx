@@ -10,9 +10,14 @@ import { AnalyzeButton } from "@/components/AnalyzeButton";
 import { AnalysisLoading } from "@/components/AnalysisLoading";
 import { ATSScore } from "@/components/ATSScore";
 import { SkillsBreakdown } from "@/components/SkillsBreakdown";
+import { EvidenceStrength } from "@/components/EvidenceStrength";
+import { ATSReadiness } from "@/components/ATSReadiness";
+import { ResumeHealth } from "@/components/ResumeHealth";
+import { DocumentDiagnostics } from "@/components/DocumentDiagnostics";
 import { AIInsights } from "@/components/AIInsights";
 import { ErrorState } from "@/components/ErrorState";
 import { analyzeResume, type AnalyzeResponse } from "@/lib/api";
+
 
 const TITLE = "SkillMatch AI — Resume vs. job description match score";
 const DESCRIPTION =
@@ -45,6 +50,7 @@ function Index() {
 
   const abortRef = useRef<AbortController | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -64,29 +70,47 @@ function Index() {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
 
+    // Discard any previous analysis before the new one starts.
     setStatus("loading");
     setError(null);
     setResult(null);
     try {
       const data = await analyzeResume(file, jobDescription.trim(), controller.signal);
+      if (requestIdRef.current !== requestId) return;
       setResult(data);
       setStatus("done");
       setApiStatus("online");
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
+      if (requestIdRef.current !== requestId) return;
+      setResult(null);
       setError(e);
       setStatus("error");
       setApiStatus("offline");
     }
   }, [file, jobDescription]);
 
-  function reset() {
+  function invalidate() {
     abortRef.current?.abort();
+    requestIdRef.current += 1;
     setStatus("idle");
     setResult(null);
     setError(null);
   }
+
+  function reset() {
+    invalidate();
+  }
+
+  function handleFileChange(next: File | null) {
+    // Any new document invalidates the currently displayed analysis.
+    invalidate();
+    setFile(next);
+  }
+
 
   const canAnalyze = Boolean(file) && jobDescription.trim().length >= MIN_JD_CHARS;
 
@@ -107,7 +131,7 @@ function Index() {
                 <div className="mt-3">
                   <ResumeUploader
                     file={file}
-                    onChange={setFile}
+                    onChange={handleFileChange}
                     disabled={status === "loading"}
                   />
                 </div>
@@ -163,14 +187,21 @@ function Index() {
             {status === "done" && result?.scoring && (
               <div className="space-y-14 pt-14">
                 <ATSScore scoring={result.scoring} filename={result.filename} />
-                <SkillsBreakdown
-                  required={result.scoring.required}
-                  preferred={result.scoring.preferred}
-                  resumeSkills={result.resume_skills}
-                />
+                <div>
+                  <SkillsBreakdown
+                    required={result.scoring.required}
+                    preferred={result.scoring.preferred}
+                    resumeSkills={result.resume_skills}
+                  />
+                  <EvidenceStrength scoring={result.scoring} />
+                </div>
+                <ATSReadiness ats={result.ats} document={result.document} />
+                <ResumeHealth health={result.resume_health} />
                 <AIInsights analysis={result.ai_analysis} />
+                <DocumentDiagnostics document={result.document} />
               </div>
             )}
+
           </div>
         </div>
       </main>

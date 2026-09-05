@@ -45,13 +45,19 @@ function Group({
           <h3 className="mt-2 text-lg font-extrabold uppercase tracking-[-0.01em]">
             {title}
           </h3>
-          <p className="label-mono mt-1 text-muted-foreground">{weightNote}</p>
+          <p className="label-mono mt-1 text-muted-foreground">
+            {weightNote}
+            {typeof group?.coverage_percent === "number"
+              ? ` — ${Math.round(group.coverage_percent)}% COVERAGE`
+              : ""}
+          </p>
         </div>
         <p className="shrink-0 text-2xl font-extrabold tabular-nums tracking-[-0.03em]">
           {count}
           <span className="text-muted-foreground">/{total}</span>
         </p>
       </div>
+
 
       <div className="mt-5">
         <p className="label-mono text-muted-foreground">MATCHED</p>

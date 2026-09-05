@@ -51,12 +51,15 @@ export function AIInsights({ analysis }: { analysis?: AiAnalysis | null | undefi
 
   return (
     <section aria-labelledby="ai-heading" className="pb-4">
-      <h2 id="ai-heading" className="label-mono text-muted-foreground">
+      <h2
+        id="ai-heading"
+        className="font-mono text-xs font-bold uppercase tracking-[0.12em] text-foreground"
+      >
         AI ANALYSIS
       </h2>
 
       {analysis.summary && (
-        <p className="mt-5 max-w-prose text-balance text-xl leading-snug">
+        <p className="mt-4 max-w-prose text-base font-normal leading-relaxed text-muted-foreground">
           {analysis.summary}
         </p>
       )}
@@ -64,7 +67,7 @@ export function AIInsights({ analysis }: { analysis?: AiAnalysis | null | undefi
       <div className="mt-10 grid gap-8 lg:grid-cols-3">
         <List index="03 — A" title="Strengths" items={strengths} marker="+" />
         <List index="03 — B" title="Gaps" items={weaknesses} marker="−" />
-        <List index="03 — C" title="Recommendations" items={recommendations} marker="→" />
+        <List index="03 — C" title="AI recommendations" items={recommendations} marker="→" />
       </div>
 
       {(analysis.experience_relevance || analysis.skill_gap_analysis) && (

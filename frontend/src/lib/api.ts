@@ -13,17 +13,121 @@ export interface SkillGroup {
   missing?: string[];
   matched_count?: number;
   total_count?: number;
+  coverage_percent?: number;
+}
+
+export type EvidenceLevel = "strong" | "moderate" | "listed" | "weak" | (string & {});
+
+export interface SkillEvidence {
+  locations?: string[];
+  evidence_level?: EvidenceLevel;
 }
 
 export interface Scoring {
+  job_match_score?: number;
   ats_score?: number;
+  signal_quality?: string;
+  keyword_coverage?: number;
+  method?: string;
   required?: SkillGroup;
   preferred?: SkillGroup;
+  evidence?: Record<string, SkillEvidence>;
   earnings?: {
     earned_points?: number;
     possible_points?: number;
   };
-  [key: string]: unknown;
+}
+
+export interface AtsCheck {
+  key?: string;
+  label?: string;
+  passed?: boolean;
+  weight?: number;
+  detail?: string;
+}
+
+export interface AtsReport {
+  score?: number;
+  status?: string;
+  checks?: AtsCheck[];
+  warnings?: string[];
+  method?: string;
+  penalties?: number;
+}
+
+export interface ResumeHealthIssue {
+  severity?: "high" | "medium" | "low" | (string & {});
+  category?: string;
+  message?: string;
+}
+
+export interface ResumeHealth {
+  score?: number;
+  categories?: {
+    content?: number;
+    structure?: number;
+    completeness?: number;
+    clarity?: number;
+    evidence?: number;
+  };
+  issues?: ResumeHealthIssue[];
+  recommendations?: string[];
+  signals?: {
+    career_stage?: string;
+    bullet_count?: number;
+    quantified_bullet_count?: number;
+    generic_bullet_count?: number;
+    action_led_bullet_count?: number;
+    word_count?: number;
+  };
+  method?: string;
+}
+
+export interface DocumentInfo {
+  page_count?: number;
+  word_count?: number;
+  character_count?: number;
+  line_count?: number;
+  bullet_count?: number;
+  bullet_ratio?: number;
+  email_detected?: boolean;
+  phone_detected?: boolean;
+  linkedin_detected?: boolean;
+  github_detected?: boolean;
+  portfolio_detected?: boolean;
+  url_count?: number;
+  date_count?: number;
+  date_range_count?: number;
+  sections?:
+    | number
+    | {
+        detected?: string[] | number;
+        count?: number;
+        standard_count?: number;
+      };
+  section_names?: string[];
+  standard_section_count?: number;
+  images?: number;
+  tables?: number;
+  likely_two_column?: boolean;
+  column_confidence?: number;
+  repeated_header_footer_lines?: number;
+  header_footer_signal?: boolean;
+  image_only_pages?: number;
+  avg_characters_per_page?: number;
+  unique_character_ratio?: number;
+  replacement_character_count?: number;
+  control_character_count?: number;
+  text_extractable?: boolean;
+  text_density?: number;
+  words_per_page?: number;
+  career_stage?: string;
+  total_experience_years?: number;
+  experience_years?: number;
+  primary_role?: string;
+  industry_focus?: string;
+  industry?: string;
+  parse_warnings?: string[];
 }
 
 export interface AiAnalysis {
@@ -33,7 +137,6 @@ export interface AiAnalysis {
   recommendations?: string[];
   experience_relevance?: string;
   skill_gap_analysis?: string;
-  [key: string]: unknown;
 }
 
 export interface AnalyzeResponse {
@@ -44,10 +147,13 @@ export interface AnalyzeResponse {
   required_skills?: string[];
   preferred_skills?: string[];
   scoring?: Scoring;
+  ats?: AtsReport;
+  resume_health?: ResumeHealth;
+  document?: DocumentInfo;
   ai_analysis?: AiAnalysis | null;
   message?: string;
-  [key: string]: unknown;
 }
+
 
 export class ApiError extends Error {
   kind: "network" | "http" | "malformed";
@@ -134,12 +240,14 @@ export async function analyzeResume(
       response.status,
     );
   }
-  if (!result.scoring || typeof result.scoring.ats_score !== "number") {
+  const score = result.scoring?.job_match_score ?? result.scoring?.ats_score;
+  if (!result.scoring || typeof score !== "number") {
     throw new ApiError(
       "The analysis response was missing its score data.",
       "malformed",
     );
   }
+
 
   return result;
 }
